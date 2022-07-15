@@ -18,12 +18,15 @@ import homework_5.homework.domain.Order;
 
 import java.util.*;
 import java.util.stream.Collector;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Main {
 
     public static void main(String[] args) {
         var orders = RestaurantOrders.read("orders_100.json").getOrders();
         doAction(orders);
+
     }
 
 
@@ -118,6 +121,19 @@ public class Main {
                         summingInt(Item::getAmount)))
                 .entrySet().stream()
                 .collect(groupingBy(Map.Entry::getValue, mapping(Map.Entry::getKey, toList())));
+    }
+
+    private static Map<String, TreeSet<String>> getEmailsByItems(List<Order> orders) {
+        var list = orders.stream()
+                .collect(
+                        groupingBy(order -> order.getCustomer().getEmail(),
+                            flatMapping(order -> order.getItems().stream()
+                                .map(Item::getName), toList()))
+                ).entrySet().stream()
+                .collect(
+                        groupingBy(entryList -> entryList.getValue().stream().findAny().get(),
+                                mapping(Map.Entry::getKey, toCollection(TreeSet::new))));
+        return list;
     }
 
     private static void doAction(List<Order> orders) {
@@ -218,6 +234,20 @@ public class Main {
                     );
                     break;
                 case 15:
+                    var treeMap = new TreeMap<>(getEmailsByItems(orders));
+                    System.out.println("+----------------------+----------------------------------+");
+                    treeMap.forEach((k, v) -> {
+                        System.out.printf("| %-20s ", k);
+                        ArrayList<String> arrList = new ArrayList<>(v);
+                        for (int i = 0; i < v.size(); i++) {
+                            System.out.printf("| %32s |%n", arrList.get(i));
+                            if (i != v.size() - 1)
+                                System.out.print("|                      ");
+                        }
+                        System.out.println("+----------------------+----------------------------------+");
+                    });
+                    break;
+                case 16:
                     return;
             }
         }
@@ -240,7 +270,7 @@ public class Main {
         if (action.equals(""))
             throw new RuntimeException("Choice can't be empty!");
         int choice = Integer.parseInt(action);
-        if (choice < 1 || choice > 15)
+        if (choice < 1 || choice > 16)
             throw new RuntimeException("Can't find this action!");
         return choice;
     }
@@ -261,7 +291,8 @@ public class Main {
                 12 -> Get MAX total of one customer
                 13 -> Get MIN total of one customer
                 14 -> Get amounts of sold items
-                15 -> Exit program
+                15 -> Get emails by items (BONUS)
+                16 -> Exit program
                 """);
         System.out.print("Choose action: ");
     }

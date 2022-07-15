@@ -54,6 +54,10 @@ public class Item {
     }
     // Этот блок кода менять нельзя! КОНЕЦ!
 
+    public Item getItem() {
+        return this;
+    }
+
     public void printItem() {
         System.out.printf("| %-23s | %-13s | %-8s | %-8s |%n",
                 name, type, price, amount);
